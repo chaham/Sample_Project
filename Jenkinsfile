@@ -1,6 +1,6 @@
 pipeline {
   environment {
-    registry = "chaham/nimage"
+    imagename = "chaham/nimage"
     registryCredential = 'dockerhub_ID'
     dockerImage = ''
   }
@@ -8,14 +8,14 @@ pipeline {
   stages {
     stage('Cloning Git') {
       steps {
-        git 'https://github.com/chaham/Sample_Project.git'
+        git([url: 'https://github.com/chaham/Sample_Project.git', branch: 'main', credentialsId: 'github_ID'])
 
       }
     }
     stage('Building image') {
       steps{
         script {
-          dockerImage = docker.build registry + ":$BUILD_NUMBER"
+          dockerImage = docker.build imagename + ":$BUILD_NUMBER"
         }
       }
     }
