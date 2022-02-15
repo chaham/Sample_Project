@@ -1,6 +1,6 @@
 pipeline {
   environment {
-    imagename = "chaham/nimage"
+    imagename = "chaham/chaimage"
     registryCredential = 'dockerhub_ID'
     dockerImage = ''
   }
