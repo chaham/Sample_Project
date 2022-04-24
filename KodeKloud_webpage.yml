@@ -1,0 +1,83 @@
+---
+-
+  hosts: localhost
+  name: "Web Page of KodeKloud"
+  tasks:
+    -
+      loop:
+        - firewalld
+        - mariadb-server
+        - httpd
+        - php
+        - php-mysql
+        - git
+      name: "Install Packages"
+      yum:
+        name: "{{item}}"
+        state: latest
+
+    -  name: Starting services
+       service:
+         name: '{{item}}'
+         state: started
+         enabled: yes
+       loop:
+         - firewalld
+         - mariadb
+         - httpd
+
+    -  name: Configure firewalld
+       firewalld:
+         port: '{{item}}'
+         zone: public
+         permanent: yes
+         immediate: yes
+         state: enabled
+       loop:
+         - 3306/tcp
+         - 80/tcp
+
+    -  name: mysql db creation
+       mysql_db:
+         name: ecomdb
+         state: present
+
+    -   name: create db user
+        mysql_user:
+         name: ecomuser
+         host: localhost
+         password: ecompassword
+         priv: '*.*:ALL,GRANT'
+         state: present
+
+    -   name: running db_load_script
+        command: 'mysql < db-load-script.sql'
+
+    -   name: configuring HTTPD default Page
+        lineinfile:
+         path: /etc/httpd/conf/httpd.conf
+         regexp: "DirectoryIndex index.html"
+         line: "DirectoryIndex index.php"
+         state: present
+         backup: yes
+        notify: Restart httpd
+
+    -  name: Cloning git
+       git:
+          repo: https://github.com/kodekloudhub/learning-app-ecommerce.git
+          dest: /var/www/html/
+          clone: yes
+          update: yes
+
+    -  name: Update index php Page
+       lineinfile:
+           path: /var/www/html/index.php
+           regexp: "172.20.1.101"
+           line: "localhost"
+           state: present
+           backup: yes
+  handlers:
+      - name: Restart httpd
+        service:
+          name: httpd
+          state: restarted
